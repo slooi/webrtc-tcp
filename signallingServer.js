@@ -50,6 +50,11 @@ function onMessage(unparsedPayload){
         // Extract information
         const payload = JSON.parse(unparsedPayload)
         const [destId, data] =  payload
+
+        if(destId===-1){
+            doLoggging(data)
+            return
+        }
     
         // Destination websocket
         const destWs = idToWs[destId]
@@ -68,6 +73,13 @@ function onMessage(unparsedPayload){
 }
 
 
+function doLoggging(data){
+    console.log(data)
+}
+
+
 idToWs.__proto__.getIdList = function(){
     return Object.keys(idToWs).map(valStr=>Number(valStr))
 }
+
+

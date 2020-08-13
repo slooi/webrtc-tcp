@@ -4,8 +4,6 @@
 
 // Require modules
 const ws = require('ws')
-const PairHandler = require('./PairHandler.js')
-
 
 // Initialisation
 const idToWs = {}

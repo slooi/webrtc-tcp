@@ -1,0 +1,1 @@
+const network = new Network()

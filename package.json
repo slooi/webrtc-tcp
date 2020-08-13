@@ -1,0 +1,16 @@
+{
+  "name": "tcpwebrtc",
+  "version": "1.0.0",
+  "description": "Reliable tcp-like messages over WebRTC",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon main.js"
+  },
+  "author": "samuel looi",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "ws": "^7.3.1"
+  }
+}

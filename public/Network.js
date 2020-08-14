@@ -98,13 +98,16 @@ SIGNALLING SERVER ###########
 
 ######################
 CONNECTION ###########
-Peer data, 3 payloads
+Peer data, 4 payloads
+TCP RELATED
 [state(0-isMessage),mCounter(number of messages sender has sent),data]
 
 [state(1-isAck),mCounterForAck(the mCounter of the payload the replier received)]
 
 [state(2-resend),mCountersForResend(a LIST of mCounterSSSSSS not received)]      <= This is so peer can resolve unsent data as quickly as possible 
 
+UDP RELATED
+[state(5-isMessageUDP),data]
 
 ######################
 NETWORK ##############

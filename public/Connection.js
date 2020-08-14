@@ -10,13 +10,11 @@ class Connection{
         this.localId = localId
         this.ws = ws
         this.pc
-        this.dataChannel
+        this.dataChannelHandler
         this.dataChannelActivated = false
 
         this.usingSignallingServer = 1      // ALWAYS SET TO TRUE (for now). Alternative is to use other peers as "signalling server"
 
-        // TCP variables
-        this.mCounter = 0   // Variable which increments everytime is sends a message
         
         this.setup()
     }
@@ -26,9 +24,8 @@ class Connection{
         this.pc = new RTCPeerConnection(config)
 
         this.pc.ondatachannel = e => {
-            this.dataChannel = e.channel
             console.log('ondatachannel e',e)
-            this.setupDataChannel()
+            this.createDataChannelHandler(e.channel)
         }
 
 
@@ -39,9 +36,10 @@ class Connection{
     }
     establishConnection(){
         // Create datachannel
-        this.dataChannel = this.pc.createDataChannel('ハルヒ')
+        const dataChannel = this.pc.createDataChannel('ハルヒ')
         
-        this.setupDataChannel()
+        // Create dataChannelHandler
+        this.createDataChannelHandler(dataChannel)
 
         // Send offer
         this.localDescriptionHandler(true)
@@ -114,63 +112,9 @@ class Connection{
         }
         console.log('e.candidate',e.candidate)
     }
-    setupDataChannel = () => {
-        console.log('setupDataChannel event')
-        this.dataChannel.addEventListener('message',this.onDataChannelMessage)
-        this.dataChannel.addEventListener('open',()=>{this.dataChannelActivated=true})
-    }
-    onDataChannelMessage = (e) => {
-        console.log('onDataChannelMessage e',e)
-        try{
-            const payload = JSON.parse(e.data)
-            console.log('payload',payload)
-            const state = payload[0]
-
-            switch(state){
-                case MESSAGE:
-                    console.log('MESSAGE')
-                    const mCounter = payload[1]
-                    const data = payload[2]
-    
-                    break;
-                case ACK: 
-                    console.log('ACK')
-                    const mCounterForAck = payload[1]
-    
-                    break;
-                case RESENDREQ:
-                    console.log('RESENDREQ')
-                    const mCountersForResend = payload[1]
-    
-                    break;
-                default:
-                    throw new Error('NANI!? state',state,' should not exist')
-            }
-        }catch(err){
-            // Can't be parsed
-            throw err
-        }
-    }
-    sendMessage(data){
-        this.sendStr(MESSAGE,data)
-        this.mCounter++
-    }
-    sendStr(state,data){
-        switch(state){
-            case MESSAGE:
-                this.dataChannel.send(JSON.stringify([state,this.mCounter,data]))
-                break;
-            case ACK:
-                const mCounterForAck = data
-                this.dataChannel.send(JSON.stringify([state,mCounterForAck]))
-                break;
-            case RESENDREQ:
-                const mCountersForResend = data
-                this.dataChannel.send(JSON.stringify([state,mCountersForResend]))
-                break;
-            default:
-                throw new Error('NANI!? state',state,' should not exist. sendStr()')
-        }
+    createDataChannelHandler = (dataChannel) => {
+        console.log('createDataChannelHandler')
+        this.dataChannelHandler = new DataChannelHandler(dataChannel)
     }
 }
 
@@ -188,6 +132,7 @@ const config = {
 const MESSAGE = 0
 const ACK = 1
 const RESENDREQ = 2
+const MESSAGEUDP = 2
 
 /* 
 // create rtcpeerconnection
@@ -199,3 +144,4 @@ const RESENDREQ = 2
 
 
 */
+

@@ -103,7 +103,7 @@ Peer data, 3 payloads
 
 [state(1-isAck),mCounterForAck(the mCounter of the payload the replier received)]
 
-[state(2-resend),mCounterForResend(a LIST of mCounterSSSSSS not received)]      <= This is so peer can resolve unsent data as quickly as possible 
+[state(2-resend),mCountersForResend(a LIST of mCounterSSSSSS not received)]      <= This is so peer can resolve unsent data as quickly as possible 
 
 
 ######################

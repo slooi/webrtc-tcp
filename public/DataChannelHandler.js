@@ -16,6 +16,11 @@ class DataChannelHandler{
 
         this.mCounterToBlock = {}   // mCounter : {data,time}      // key - mCounter of the message, data - corresponding data of said message, time - time when received data  // Managed by exeTCP
 
+        // Exposed callbacks
+        this.gotData = (data) => {      // !@#!@#!@# 
+            console.log(data)
+        }
+
         this.setup()
     }
     setup(){
@@ -138,8 +143,47 @@ class DataChannelHandler{
     exeTCP(mCounterRemote,data){
         // Manages the execution of received "TCP" messages
         // Only executes "TCP" messages in ascending mCounter order. UNLESS too much time has elapsed.
+        // Purpose of this is to make sure data is executed IN ORDER unless too much time has elapsed
+
+        // Store all data info
         this.mCounterToBlock[mCounterRemote] = {data,time:new Date()}
         console.log('this.mCounterToBlock',this.mCounterToBlock)
+
+        // Execute if message is in order
+        let block
+        while((block = this.mCounterToBlock[this.mCounterRemoteExe]) !== undefined){
+
+            const data = block.data
+            this.gotData(data)  // Callback set by user
+
+            this.mCounterRemoteExe++
+        }
     }
 
 }
+
+
+/* 
+Features:
+ - this.timeElapsedBeforeNext       // How long you will wait for an ordered "TCP" messages to arrive
+    // I want to have this per message, but to implement this I'd have to have seperate multiple datachannel
+    // To prevent data being bottle necked. I think it would be good to implement one TCP channel and one UDP channel
+    => Lets plan what type of data I will be sending:
+    => Lets break down what they will need as well:
+
+    0) Group chat messages <= ordered group TCP (require all messages to go through a single person. How do we make this person?)
+    1) Chat messages    <= ordered TCP
+    2) Creation of rooms inside lobby   <= TCP    
+    3) Moving ships <= ordered TCP (only if you change the action of the ship(s). If they're completely different ships it doesn't matter)
+    4) Ships attacking  <= ordered TCP (only if you change the action of the ship(s). If they're completely different ships it doesn't matter)
+    5) ships being destroyed???   <= TCP
+    6) Game state (0-lobby, 1-started, 2-end)       <= TCP
+    7) Who won? <= TCP
+    8) Positions of ships   <= UDP
+    9) Health of ships (s->c) <= ordered TCP / UDP
+    10) Host assignment?  <= Ordered TCP
+
+
+ - A way of getting topology of the entire network
+
+*/

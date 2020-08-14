@@ -21,13 +21,10 @@ class Connection{
         // Create RTCPeerConnection
         this.pc = new RTCPeerConnection(config)
 
-        this.pc.ondatachannel = function(e){
-            console.log('ondatachannel')
-            console.log(e)
-            console.log(e)
-            console.log(e)
-            console.log(e)
-            console.log(e)
+        this.pc.ondatachannel = e => {
+            this.dataChannel = e.channel
+            console.log('ondatachannel e',e)
+            this.setupDataChannel()
         }
 
 
@@ -115,6 +112,10 @@ class Connection{
     }
     setupDataChannel = () => {
         console.log('setupDataChannel event')
+        this.dataChannel.addEventListener('message',this.onDataChannelMessage)
+    }
+    onDataChannelMessage = (e) => {
+        console.log('onDataChannelMessage e',e)
     }
 }
 
@@ -126,7 +127,7 @@ const config = {
         {url:"turn:relay.backups.cz",credential:"webrtc",username:"webrtc"},
         {url:"turn:relay.backups.cz?transport=tcp",credential:"webrtc",username:"webrtc"}
     ],
-    iceTransportPolicy:"all"
+    iceTransportPolicy:"all"//relay 
 }
 
 /* 

@@ -10,6 +10,7 @@ class Connection{
         this.localId = localId
         this.ws = ws
         this.pc
+        this.dataChannel
 
         this.usingSignallingServer = 1      // ALWAYS SET TO TRUE (for now). Alternative is to use other peers as "signalling server"
         
@@ -18,7 +19,16 @@ class Connection{
 
     setup(){
         // Create RTCPeerConnection
-        this.pc = new RTCPeerConnection()
+        this.pc = new RTCPeerConnection(config)
+
+        this.pc.ondatachannel = function(e){
+            console.log('ondatachannel')
+            console.log(e)
+            console.log(e)
+            console.log(e)
+            console.log(e)
+            console.log(e)
+        }
 
 
         // onicecandidate
@@ -28,7 +38,9 @@ class Connection{
     }
     establishConnection(){
         // Create datachannel
+        this.dataChannel = this.pc.createDataChannel('ハルヒ')
         
+        this.setupDataChannel()
 
         // Send offer
         this.localDescriptionHandler(true)
@@ -83,17 +95,39 @@ class Connection{
 
         }else if(sessionDescription.ice){
             // ice message
-            console.log('ice')
+            console.log('ice sessionDescription.ice:',sessionDescription.ice)
+            try{
+                await this.pc.addIceCandidate(sessionDescription.ice)
+            }catch(err){
+                throw err
+            }
+            
         }else{
             throw new Error('THIS SHOULD NOT BE HAPPENING! Did you send on null ice candidate?')
         }
     }
     gotIceCandidate = e =>{
+        const candidate = e.candidate
+        if(candidate){
+            this.sendStr({ice:e.candidate})
+        }
         console.log('e.candidate',e.candidate)
+    }
+    setupDataChannel = () => {
+        console.log('setupDataChannel event')
     }
 }
 
-Connection.prototype
+const config = {
+    iceServers:[
+        {urls:"stun:stun.stunprotocol.org:3478"},
+        {urls:"stun:stun.l.google.com:19302"},
+        {url:"turn:numb.viagenie.ca",credential:"muazkh",username:"webrtc@live.com"},
+        {url:"turn:relay.backups.cz",credential:"webrtc",username:"webrtc"},
+        {url:"turn:relay.backups.cz?transport=tcp",credential:"webrtc",username:"webrtc"}
+    ],
+    iceTransportPolicy:"all"
+}
 
 /* 
 // create rtcpeerconnection

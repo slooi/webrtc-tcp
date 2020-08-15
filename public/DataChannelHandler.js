@@ -8,13 +8,15 @@ class DataChannelHandler{
         
         // TCP variables
         this.mCounterLocal = 0   // Variable which increments everytime is sends a message
-        this.mCounterRemoteHighest = 0   // The HIGHEST mCounter we've RECEIVED from remote peer
-        this.mCounterRemoteExe = 0   // The highest mCounter we've EXECUTED from remote peer
+        this.mCounterRemoteHighest = 0   // The HIGHEST mCounter we've RECEIVED from remote peer. Used for debugging
+        this.mCounterRemoteExe = 0   // The mCounter of the message we're waiting to EXECUTE from remote peer
 
         this.mCounterReceived = {}  // Message with mCounter has been received ACK. {0:false,1:true}    <= message with mCounter of 0 not received ACK
         this.timeBeforeResend = 1000
 
         this.mCounterToBlock = {}   // mCounter : {data,time}      // key - mCounter of the message, data - corresponding data of said message, time - time when received data  // Managed by exeOrderedTCP
+        this.maxTCPWaitTime = 15 * 1000
+
 
         // Exposed callbacks
         this.gotData = (data) => {      // !@#!@#!@# 
@@ -48,12 +50,16 @@ class DataChannelHandler{
                     // Reply with ACK
                     this.sendStr(ACK,mCounterRemote)
     
-                    // Store all info into a block
-                    this.mCounterToBlock[mCounterRemote] = {data,date:new Date()}
-                    
-                    // EXECUTE DATA !@#!@#!@#
-                    this.exeOrderedTCP()
+                    // Why are we adding if statement?
+                    // Because we don't want already executed OR skipped scripts to run
+                    if(mCounterRemote>=this.mCounterRemoteExe){
+                        // Store all info into a block
+                        this.mCounterToBlock[mCounterRemote] = {data,date:new Date()}
 
+                        // EXECUTE DATA !@#!@#!@#
+                        this.exeOrderedTCP()
+                    }
+                    
                     break;}
                 case ACK: {
                     console.log('ACK received')
@@ -151,11 +157,17 @@ class DataChannelHandler{
 
         console.log('this.mCounterToBlock',this.mCounterToBlock)
 
-        // Get oldest block
+        // Get next object to execute
         let block = this.mCounterToBlock[this.mCounterRemoteExe]
         
         if(block === undefined){
             // If there's a missing block
+
+            // Get first block on list
+            const keys = Object.keys(this.mCounterToBlock)  // STRING
+            console.log('UNDEFINED!!!! keys',keys)
+            console.log('UNDEFINED!!!! this.mCounterToBlock',this.mCounterToBlock)
+            const block = this.mCounterToBlock[keys[0]]
 
             if(new Date()-block.date>this.maxTCPWaitTime){
                 // If waited for missing message too long
@@ -221,3 +233,14 @@ Features:
 
 //bufferedAmountLowThreshold 
 //bufferedAmount
+/* 
+
+pc.sctp.maxMessageSize 
+MAX_CHUNK_SIZE
+*/
+
+
+const MESSAGE = 0
+const ACK = 1
+const RESENDREQ = 2
+const MESSAGEUDP = 5

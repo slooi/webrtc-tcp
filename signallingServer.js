@@ -19,6 +19,7 @@ module.exports = function(server){
     wss.on('connection',ws=>{
         onConnection.call(ws)
         ws.on('message',onMessage)
+        ws.on('close',onClose)
     })
 }
 
@@ -70,6 +71,11 @@ function onMessage(unparsedPayload){
         // !@#!@#!@#!@#!@#!@#!@# change later in production
         throw err
     }
+}
+
+function onClose(){
+    console.log('ws '+this.id+' disconnected')
+    delete idToWs[this.id]
 }
 
 

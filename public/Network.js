@@ -6,7 +6,7 @@ class Network{
     constructor(){
         this.ws
         this.connections = {} // id to connection
-        this.userIdList   // List of user ids from signalling server. That's all it is. A list of ids from server
+        this.userIdList = []  // List of user ids from signalling server. That's all it is. A list of ids from server
         this.localId
         this.setup()
     }
@@ -20,8 +20,8 @@ class Network{
 
         const payload = JSON.parse(e.data)
         
-        if(this.userIdList){
-            // If already have userlist
+        if(this.localId !== undefined){
+            // If already have id (i.e. setup from server is completed)
             // Relay it to appropriate connection instance
 
             const senderId = payload[0]
@@ -41,6 +41,9 @@ class Network{
             this.userIdList = payload[1]
 
             console.log('Your id is: '+this.localId)
+
+            // !@#!@#!@#
+            this.createConnectionList()
         }
         console.log('NETWORK signalling server payload:',payload)
     }

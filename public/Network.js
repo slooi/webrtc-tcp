@@ -49,6 +49,12 @@ class Network{
         const connection = new Connection(remoteId,this.localId,this.ws)
         this.connections[remoteId]=(connection)
     }
+    createConnectionList(){
+        // For every id in userIdList, a connection is created
+        this.userIdList.forEach(id=>{
+            this.createConnection(id)
+        })
+    }
 }
 
 /* 

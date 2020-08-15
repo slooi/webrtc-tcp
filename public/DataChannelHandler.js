@@ -14,7 +14,7 @@ class DataChannelHandler{
         this.mCounterReceived = {}  // Message with mCounter has been received ACK. {0:false,1:true}    <= message with mCounter of 0 not received ACK
         this.timeBeforeResend = 1000
 
-        this.mCounterToBlock = {}   // mCounter : {data,time}      // key - mCounter of the message, data - corresponding data of said message, time - time when received data  // Managed by exeTCP
+        this.mCounterToBlock = {}   // mCounter : {data,time}      // key - mCounter of the message, data - corresponding data of said message, time - time when received data  // Managed by exeOrderedTCP
 
         // Exposed callbacks
         this.gotData = (data) => {      // !@#!@#!@# 
@@ -48,8 +48,11 @@ class DataChannelHandler{
                     // Reply with ACK
                     this.sendStr(ACK,mCounterRemote)
     
+                    // Store all info into a block
+                    this.mCounterToBlock[mCounterRemote] = {data,date:new Date()}
+                    
                     // EXECUTE DATA !@#!@#!@#
-                    this.exeTCP(mCounterRemote,data)
+                    this.exeOrderedTCP()
 
                     break;}
                 case ACK: {
@@ -81,7 +84,6 @@ class DataChannelHandler{
     sendMessage(data){
         // Sends a regular normal message to other remote using "TCP"
         this.sendStr(MESSAGE,data)
-        this.mCounterLocal++
     }
     sendStr(state,data){
         switch(state){
@@ -114,10 +116,12 @@ class DataChannelHandler{
     tcpSendProtocol(payloadStr){
         // Run my "TCP" send protocol
         // Keeps sending message until remote user replies or max number of sends reached
-        const maxSends = 10
+        const maxSends = 10 //!@#!@#!@# maybe change later
         let sendCounter = 0
 
         const mCounterLocal = this.mCounterLocal
+        this.mCounterLocal++
+
         this.mCounterReceived[mCounterLocal] = false
         
         const loop = () => {
@@ -140,23 +144,40 @@ class DataChannelHandler{
         }
         loop()
     }
-    exeTCP(mCounterRemote,data){
+    exeOrderedTCP(){
         // Manages the execution of received "TCP" messages
         // Only executes "TCP" messages in ascending mCounter order. UNLESS too much time has elapsed.
         // Purpose of this is to make sure data is executed IN ORDER unless too much time has elapsed
 
-        // Store all data info
-        this.mCounterToBlock[mCounterRemote] = {data,time:new Date()}
         console.log('this.mCounterToBlock',this.mCounterToBlock)
 
-        // Execute if message is in order
-        let block
-        while((block = this.mCounterToBlock[this.mCounterRemoteExe]) !== undefined){
+        // Get oldest block
+        let block = this.mCounterToBlock[this.mCounterRemoteExe]
+        
+        if(block === undefined){
+            // If there's a missing block
 
-            const data = block.data
-            this.gotData(data)  // Callback set by user
+            if(new Date()-block.date>this.maxTCPWaitTime){
+                // If waited for missing message too long
+                // Pretend that it was executed
+                this.mCounterRemoteExe++
+                this.exeOrderedTCP()
+            }
+        }else{
+            // Execute if message is in order
+            do{
+                const data = block.data
+                console.log('Execute callback gotData')
+                this.gotData(data)  // Callback set by user
+    
+                delete this.mCounterToBlock[this.mCounterRemoteExe]
+    
+                // Increment mCounterRemote of executed 
+                this.mCounterRemoteExe++
 
-            this.mCounterRemoteExe++
+                // Update block
+                block = this.mCounterToBlock[this.mCounterRemoteExe]
+            }while(block !== undefined)
         }
     }
 
@@ -172,7 +193,7 @@ Features:
     => Lets break down what they will need as well:
 
     0) Group chat messages <= ordered group TCP (require all messages to go through a single person. How do we make this person?)
-    1) Chat messages    <= ordered TCP
+    1) Chat messages (from 1 remote client)   <= ordered TCP
     2) Creation of rooms inside lobby   <= TCP    
     3) Moving ships <= ordered TCP (only if you change the action of the ship(s). If they're completely different ships it doesn't matter)
     4) Ships attacking  <= ordered TCP (only if you change the action of the ship(s). If they're completely different ships it doesn't matter)
@@ -182,8 +203,21 @@ Features:
     8) Positions of ships   <= UDP
     9) Health of ships (s->c) <= ordered TCP / UDP
     10) Host assignment?  <= Ordered TCP
+    11) Relay??????? but  whether it would be unordered TCP, orded TCP or UDP would depend on the data being sent...... 
+    => create dataChannels in groups.
+    Let -1 => normal
+    let num:num => relay
+    this.dataChannels = {
+        -1:{0:dataChannel,1:dataChannel,2:dataChannel}
+        [id:id2]:{0:dataChannel,1:dataChannel,2:dataChannel}
+    }
 
 
+ - NETWORK LAYER
  - A way of getting topology of the entire network
 
+ - A way finding the number of nodes in the network which don't have full connection ()
 */
+
+//bufferedAmountLowThreshold 
+//bufferedAmount

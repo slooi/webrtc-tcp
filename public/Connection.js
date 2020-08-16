@@ -129,10 +129,10 @@ const config = {
     iceTransportPolicy:"all"//relay 
 }
 
-const MESSAGE = 0
-const ACK = 1
-const RESENDREQ = 2
-const MESSAGEUDP = 2
+// const MESSAGE = 0
+// const ACK = 1
+// const RESENDREQ = 2
+// const MESSAGEUDP = 2
 
 /* 
 // create rtcpeerconnection

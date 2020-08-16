@@ -237,6 +237,8 @@ Features:
 
 pc.sctp.maxMessageSize 
 MAX_CHUNK_SIZE
+
+262144
 */
 
 
